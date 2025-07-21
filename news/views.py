@@ -5,7 +5,7 @@ from .models import News
 from .serializers import NewsSerializer
 
 class NewsList(ListAPIView):
-    queryset = News.objects.all()                   # ← Base queryset
+    queryset = News.objects.all()
     serializer_class = NewsSerializer
-    filter_backends = [DjangoFilterBackend]         # ← Tell DRF you’re using django-filter
-    filterset_class = NewsFilter                    # ← Point at your custom FilterSet
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = NewsFilter

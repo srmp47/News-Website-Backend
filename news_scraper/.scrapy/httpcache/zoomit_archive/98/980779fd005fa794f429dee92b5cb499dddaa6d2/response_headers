@@ -1,0 +1,13 @@
+Accept-Ranges: bytes
+Cache-Control: public, s-maxage=299, stale-while-revalidate=599
+Content-Type: text/html; charset=utf-8
+Date: Sun, 20 Jul 2025 21:20:50 GMT
+Device: Desktop
+Etag: "blpgy7ys2s2ziw"
+Server: Sotoon CDN
+Strict-Transport-Security: max-age=31536000
+Vary: Accept-Encoding
+X-Proxy-Cache: STALE
+X-Zrk-Cs: BYPASS
+X-Zrk-Sn: 1035
+X-Zrk-Us: 200

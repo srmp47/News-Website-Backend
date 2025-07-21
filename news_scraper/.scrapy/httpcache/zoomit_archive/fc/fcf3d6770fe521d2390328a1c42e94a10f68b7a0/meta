@@ -1,0 +1,1 @@
+{'url': 'https://api2.zoomit.ir/editorial/api/articles/browse?sort=Newest&publishDate=All&readingTime=All&pageNumber=12&PageSize=20', 'method': 'GET', 'status': 200, 'response_url': 'https://api2.zoomit.ir/editorial/api/articles/browse?sort=Newest&publishDate=All&readingTime=All&pageNumber=12&PageSize=20', 'timestamp': 1753031309.5560474}
