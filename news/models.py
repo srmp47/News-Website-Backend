@@ -1,6 +1,5 @@
 from django.db import models
 from django.http import HttpResponse
-from flask import Response
 
 
 class Tag(models.Model):

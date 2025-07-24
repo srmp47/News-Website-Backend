@@ -2,6 +2,12 @@ import scrapy
 import json
 from urllib.parse import urlencode
 from scrapy_playwright.page import PageMethod
+import os
+import django
+from asgiref.sync import sync_to_async
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'NewsWebsiteBackend.settings')
+django.setup()
+from news.models import News, Tag
 
 
 class ZoomitArchiveSpider(scrapy.Spider):
@@ -75,26 +81,43 @@ class ZoomitArchiveSpider(scrapy.Spider):
             if art.get('slug'):
                 yield response.follow(f"{self.ARTICLE_BASE_URL}{art['slug']}/", callback=self.parse_article)
 
-    def parse_article(self, response):
+
+    async def parse_article(self, response):
         if self.article_count >= self.MAX_ARTICLES:
             return
         self.article_count += 1
 
+        article_url = response.url
         title = response.css('h1::text').get(default='').strip()
-        paragraphs = response.css('div[itemprop="articleBody"] p::text, div.article-body p::text, div.post-content p::text').getall()
+        paragraphs = response.css(
+            'div[itemprop="articleBody"] p::text, '
+            'div.article-body p::text, '
+            'div.post-content p::text'
+        ).getall()
         if not paragraphs:
-            paragraphs = response.css('p.sc-9996cfc-0.gAFslo.sc-b2ef6c17-0.joXpaW::text').getall()
+            paragraphs = response.css(
+                'p.sc-9996cfc-0.gAFslo.sc-b2ef6c17-0.joXpaW::text'
+            ).getall()
         content = "\n".join(p.strip() for p in paragraphs if p.strip())
-
-        source = response.css('div.sc-8efc4a6a-4 a::text, div.source::text, span.source-name::text').get(default='زومیت').strip()
-
         tags = response.css('span.sc-9996cfc-0.NawFH::text').getall()
         tags = [t.strip() for t in tags if t.strip()]
 
+        tag_objs = []
+        for tag_str in tags:
+            tag_obj, _ = await sync_to_async(Tag.objects.get_or_create)(tag_string=tag_str)
+            tag_objs.append(tag_obj)
+
+        news_obj, created = await sync_to_async(News.objects.get_or_create)(
+            title=title,
+            defaults={'content': content, 'source': article_url}
+        )
+        await sync_to_async(news_obj.tags.set)(tag_objs)
+        await sync_to_async(news_obj.save)()
+
         yield {
+            'url': article_url,
             'title': title,
             'content': content,
-            'source': source,
             'tags': tags
         }
 
