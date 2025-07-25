@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+from celery.schedules import crontab
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'news',
     'django_filters',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -141,6 +144,15 @@ REST_FRAMEWORK = {
 }
 
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'django-db' 
+CELERY_CACHE_BACKEND = 'django-cache'
+INSTALLED_APPS += [
+    'celery',
+    'django_celery_results',
+]
+
+
 
 TEMPLATES = [
     {
@@ -157,3 +169,18 @@ TEMPLATES = [
         },
     },
 ]
+
+
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULE = {
+    'run-spider-daily': {
+        'task': 'news.tasks.run_spider',
+        'schedule': crontab(hour=3, minute=0),
+        'options': {'expires': 60 * 60}
+    },
+    'run-spider-hourly': {
+        'task': 'news.tasks.run_spider',
+        'schedule': crontab(minute=0),
+    },
+}

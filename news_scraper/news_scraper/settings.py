@@ -13,9 +13,8 @@ import django
 sys.path.append(os.path.dirname(os.path.abspath('.')))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'NewsWebsiteBackend.settings'
 django.setup()
-BOT_NAME = "news_scraper"
 
-SPIDER_MODULES = ["news_scraper.spiders"]
+
 NEWSPIDER_MODULE = "news_scraper.spiders"
 
 ADDONS = {}
@@ -92,3 +91,5 @@ DOWNLOAD_DELAY = 1
 
 # Set settings whose default value is deprecated to a future-proof value
 FEED_EXPORT_ENCODING = "utf-8"
+BOT_NAME = 'news_scraper'
+SPIDER_MODULES = ['news_scraper.spiders']
