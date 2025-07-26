@@ -1,0 +1,12 @@
+django
+djangorestframework
+celery
+redis
+django-celery-results
+django-celery-beat
+gunicorn
+scrapy
+flower
+django-filter
+scrapy-playwright
+whitenoise

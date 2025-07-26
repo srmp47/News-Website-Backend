@@ -1,0 +1,78 @@
+
+services:
+  # سرویس ردیس برای صف‌بندی
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  # سرویس اصلی جنگو
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn NewsWebsiteBackend.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - DJANGO_SETTINGS_MODULE=NewsWebsiteBackend.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  # کارگر سلری برای پردازش تسک‌ها
+  celery_worker:
+    build: .
+    command: celery -A NewsWebsiteBackend worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - web
+    environment:
+      - DJANGO_SETTINGS_MODULE=NewsWebsiteBackend.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  # زمان‌بند سلری برای اجرای خودکار
+  celery_beat:
+    build: .
+    command: celery -A NewsWebsiteBackend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+      - beat_volume:/var/lib/celery
+    depends_on:
+      - redis
+      - web
+    environment:
+      - DJANGO_SETTINGS_MODULE=NewsWebsiteBackend.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  # ابزار مانیتورینگ
+  flower:
+    build: .
+    command: celery -A NewsWebsiteBackend flower --port=5555 --basic_auth=admin:password
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - web
+      - celery_worker
+    environment:
+      - DJANGO_SETTINGS_MODULE=NewsWebsiteBackend.settings
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# ذخیره‌سازی دائمی داده‌ها
+volumes:
+  redis_data:
+  static_volume:
+  beat_volume:
